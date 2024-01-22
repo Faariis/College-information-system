@@ -11,3 +11,5 @@ app.get('/getData', (req, res) =>{
 app.listen(3000, (req, res) =>{
     console.log('Express API radi na portu 3000');
 })
+
+
