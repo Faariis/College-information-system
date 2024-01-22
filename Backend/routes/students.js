@@ -20,6 +20,13 @@ router.get("/get", (req, res) => {
 router.post("/add", (req, res) => {
   let students = req.body;
 
+  // Provjera jer ima 12 semestara i ne smije biti slovo
+  if (students.Semester <=0 || students.Semester >=12){
+    return res
+          .status(400)
+          .json({ error: "Ima 12 semestara [1-12]!" });
+  }
+
   // Provjerava da li postoji student sa istim brojem indeksa
   const checkStudentIndexNumber =
     "SELECT * FROM students WHERE IndexNumber = ?";
@@ -89,20 +96,15 @@ router.post("/add", (req, res) => {
                   "Error checking student first and last name existence:",
                   err
                 );
-                return res
-                  .status(500)
-                  .json({
-                    error:
-                      "Error checking student first and last name existence",
-                  });
+                return res.status(500).json({
+                  error: "Error checking student first and last name existence",
+                });
               }
 
               if (studentFL.length !== 0) {
-                return res
-                  .status(400)
-                  .json({
-                    error: "Već postoji student sa tim imenom i prezimenom.",
-                  });
+                return res.status(400).json({
+                  error: "Već postoji student sa tim imenom i prezimenom.",
+                });
               } else if (/\d/.test(students.LastName)) {
                 return res
                   .status(400)
@@ -112,36 +114,86 @@ router.post("/add", (req, res) => {
                   .status(400)
                   .json({ message: "Ime ne smije sadržavati brojeve!" });
               }
-              
-              // Glavna funkcija tj. POST
-              var query =
-                "insert into students (RegistrationYear, Semester, IndexNumber, JMBG, FirstName, LastName, Gender, Email, Phone, DateOfBirth, PlaceOfBirth, Address, UserType, Password) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+
+              // Provjerava da li postoji student sa istim mailom
+              const checkStudentEmail =
+                "SELECT * FROM students WHERE Email = ?";
               connection.query(
-                query,
-                [
-                  students.RegistrationYear,
-                  students.Semester,
-                  students.IndexNumber,
-                  students.JMBG,
-                  students.FirstName,
-                  students.LastName,
-                  students.Gender,
-                  students.Email,
-                  students.Phone,
-                  students.DateOfBirth,
-                  students.PlaceOfBirth,
-                  students.Address,
-                  students.UserType,
-                  students.Password,
-                ],
-                (err, results) => {
-                  if (!err) {
+                checkStudentEmail,
+                [students.Email],
+                (err, studentEmail) => {
+                  if (err) {
+                    console.error(
+                      "Error checking student email existence:",
+                      err
+                    );
                     return res
-                      .status(200)
-                      .json({ message: "Student je uspješno dodan!" });
-                  } else {
-                    return res.status(500).json(err);
+                      .status(500)
+                      .json({
+                        error: "Error checking student email existence",
+                      });
                   }
+
+                  if (studentEmail.length !== 0) {
+                    return res
+                      .status(400)
+                      .json({ error: "Već postoji student sa tim mailom." });
+                  }
+
+                  // Provjerava da li postoji student sa istim brojem telefona
+      const checkStudentPhone = "SELECT * FROM students WHERE Phone = ?";
+      connection.query(
+        checkStudentPhone,
+        [students.Phone],
+        (err, studentPhone) => {
+          if (err) {
+            console.error("Error checking student phone existence:", err);
+            return res
+              .status(500)
+              .json({ error: "Error checking student phone existence" });
+          }
+
+          if (studentPhone.length !== 0) {
+            return res
+              .status(400)
+              .json({ error: "Već postoji student sa tim brojem telefona." });
+          } else if (!/^\d+$/.test(students.Phone)) {
+            return res
+              .status(400)
+              .json({ message: "Telefon mora se sastojati od brojeva!" });
+          }
+
+                  // Glavna funkcija tj. POST
+                  var query =
+                    "insert into students (RegistrationYear, Semester, IndexNumber, JMBG, FirstName, LastName, Gender, Email, Phone, DateOfBirth, PlaceOfBirth, Address, UserType, Password) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                  connection.query(
+                    query,
+                    [
+                      students.RegistrationYear,
+                      students.Semester,
+                      students.IndexNumber,
+                      students.JMBG,
+                      students.FirstName,
+                      students.LastName,
+                      students.Gender,
+                      students.Email,
+                      students.Phone,
+                      students.DateOfBirth,
+                      students.PlaceOfBirth,
+                      students.Address,
+                      students.UserType,
+                      students.Password,
+                    ],
+                    (err, results) => {
+                      if (!err) {
+                        return res
+                          .status(200)
+                          .json({ message: "Student je uspješno dodan!" });
+                      } else {
+                        return res.status(500).json(err);
+                      }
+                    }
+                  );
                 }
               );
             }
@@ -150,6 +202,7 @@ router.post("/add", (req, res) => {
       );
     }
   );
+});
 });
 
 module.exports = router;
