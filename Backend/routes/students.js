@@ -39,12 +39,10 @@ router.post("/add", (req, res) => {
           .status(400)
           .json({ error: "Već postoji student sa tim indeksom." });
       } else if (students.IndexNumber <= 0 || students.IndexNumber >= 1000) {
-        return res
-          .status(400)
-          .json({
-            error:
-              "Vrijednost indeksa ne smije biti manje od 1 ili veće od 1000!",
-          });
+        return res.status(400).json({
+          error:
+            "Vrijednost indeksa ne smije biti manje od 1 ili veće od 1000!",
+        });
       } else if (!/^\d+$/.test(students.IndexNumber)) {
         return res
           .status(400)
@@ -69,47 +67,83 @@ router.post("/add", (req, res) => {
               .status(400)
               .json({ error: "Već postoji student sa tim matičnim brojem." });
           } else if (students.JMBG.length !== 13) {
-            return res
-              .status(400)
-              .json({
-                error:
-                  "Vrijednost matičnog broja ne smije biti manja ili veća od 13!",
-              });
+            return res.status(400).json({
+              error:
+                "Vrijednost matičnog broja ne smije biti manja ili veća od 13!",
+            });
           } else if (!/^\d+$/.test(students.JMBG)) {
             return res
               .status(400)
               .json({ message: "JMBG mora se sastojati od brojeva!" });
           }
 
-          // Glavna funkcija tj. POST
-          var query =
-            "insert into students (RegistrationYear, Semester, IndexNumber, JMBG, FirstName, LastName, Gender, Email, Phone, DateOfBirth, PlaceOfBirth, Address, UserType, Password) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+          // Provjerava postoje li dva studenta sa istim imenom i prezimenom
+          const checkStudentFirstNameLastName =
+            "SELECT * FROM students WHERE FirstName = ? AND LastName = ?";
           connection.query(
-            query,
-            [
-              students.RegistrationYear,
-              students.Semester,
-              students.IndexNumber,
-              students.JMBG,
-              students.FirstName,
-              students.LastName,
-              students.Gender,
-              students.Email,
-              students.Phone,
-              students.DateOfBirth,
-              students.PlaceOfBirth,
-              students.Address,
-              students.UserType,
-              students.Password,
-            ],
-            (err, results) => {
-              if (!err) {
+            checkStudentFirstNameLastName,
+            [students.FirstName, students.LastName],
+            (err, studentFL) => {
+              if (err) {
+                console.error(
+                  "Error checking student first and last name existence:",
+                  err
+                );
                 return res
-                  .status(200)
-                  .json({ message: "Student je uspješno dodan!" });
-              } else {
-                return res.status(500).json(err);
+                  .status(500)
+                  .json({
+                    error:
+                      "Error checking student first and last name existence",
+                  });
               }
+
+              if (studentFL.length !== 0) {
+                return res
+                  .status(400)
+                  .json({
+                    error: "Već postoji student sa tim imenom i prezimenom.",
+                  });
+              } else if (/\d/.test(students.LastName)) {
+                return res
+                  .status(400)
+                  .json({ message: "Prezime ne smije sadržavati brojeve!" });
+              } else if (/\d/.test(students.FirstName)) {
+                return res
+                  .status(400)
+                  .json({ message: "Ime ne smije sadržavati brojeve!" });
+              }
+              
+              // Glavna funkcija tj. POST
+              var query =
+                "insert into students (RegistrationYear, Semester, IndexNumber, JMBG, FirstName, LastName, Gender, Email, Phone, DateOfBirth, PlaceOfBirth, Address, UserType, Password) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+              connection.query(
+                query,
+                [
+                  students.RegistrationYear,
+                  students.Semester,
+                  students.IndexNumber,
+                  students.JMBG,
+                  students.FirstName,
+                  students.LastName,
+                  students.Gender,
+                  students.Email,
+                  students.Phone,
+                  students.DateOfBirth,
+                  students.PlaceOfBirth,
+                  students.Address,
+                  students.UserType,
+                  students.Password,
+                ],
+                (err, results) => {
+                  if (!err) {
+                    return res
+                      .status(200)
+                      .json({ message: "Student je uspješno dodan!" });
+                  } else {
+                    return res.status(500).json(err);
+                  }
+                }
+              );
             }
           );
         }
