@@ -3,7 +3,7 @@ const connection = require("../connection");
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const { route } = require("..");
+//const { route } = require("..");
 
 //-------------------------------------------------------------------------------------------------------
 // GET
@@ -437,9 +437,9 @@ router.delete('/delete', (req, res) =>{
       });
 });
 //-------------------------------------------------------------------------------------------------------
-// LOGIN
+// REGISTRATION
 
-router.post('/login', async(req, res) =>{
+router.post('/register', async(req, res) =>{
     try {
        const {
         RegistrationYear,
@@ -458,6 +458,8 @@ router.post('/login', async(req, res) =>{
         Password } = req.body;
        // Vrši se hashiranje šifre
        const hashedPassword = await bcrypt.hash(Password, 10);
+       // Determine which table to insert data into based on UserType
+       // const tableName = UserType === 'admin' ? 'Admins' : 'Students';
 
        // Glavna funkcija 
        const query = 'insert into Students (RegistrationYear, Semester, IndexNumber, JMBG, FirstName, LastName, Gender, Email, Phone, DateOfBirth, PlaceOfBirth, Address, UserType, Password) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
@@ -482,6 +484,132 @@ router.post('/login', async(req, res) =>{
         return res.status(500).json({ error: 'Greška kod!' });
     }
 });
+//-------------------------------------------------------------------------------------------------------
+// LOGIN
+/*
+router.post('/login', async(req, res) =>{
+     try {
+          const { Email, Password, UserType } = req.body;
+          
+          // Operator koji kaže ako je admin dodat u tabelu Admini, ako je bilo šta drugo u tabelu Studenti
+          const tableName = UserType === 'admin' ? 'admins' : 'students';
+
+          const query = `SELECT * FROM ${tableName} WHERE Email = ?`;
+          const results = await connection.query(query, [Email]);
+
+          if (results.length === 0) {
+            return res.status(401).json({message: "Loša šifra ili username!"});
+          }
+
+          const user = results[0];
+          console.log(results);
+         
+          // Upoređivanje šifre sa hashovanom šifrom
+          const passwordMatch = await bcrypt.compare(Password, user.Password);
+
+          if (!passwordMatch){
+            return res.status(401).json({message: "Pogrešna šifra!"});
+            
+          }
+          console.log('Password Match:', passwordMatch);
+
+          // Dodavanje JWT-a
+          const token = jwt.sign({ userId: user[`${UserType}ID`], userType: UserType}, 'tajni-ključ', {expiresIn: '1h'});
+          return res.status(200).json({message: "Uspješna prijava", token});
+     } catch (error) {
+        console.error('Error in login:', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+     }
+});
+*/
+/*
+// Assuming this is where you handle login
+router.post('/login', (req, res) => {
+    const { Email, Password, UserType } = req.body;
+  
+    // Assuming you have a MySQL connection named 'connection'
+    connection.query("SELECT * FROM students WHERE Email = ?", [Email], async (error, results) => {
+      if (error) {
+        console.error('Error in login:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+  
+      if (results.length === 0) {
+        // No user found with the given email
+        return res.status(401).json({ message: 'User not found' });
+      }
+  
+      const user = results[0];
+  
+      try {
+        // Now you can safely access the 'Password' property
+        const passwordMatch = await bcrypt.compare(Password, user.Password);
+  
+        if (passwordMatch) {
+          // Passwords match, check user type
+          if (UserType === user.UserType) {
+            // User type matches, authentication successful
+            return res.status(200).json({ message: 'Authentication successful', userType: user.UserType });
+          } else {
+            // User type does not match, authentication failed
+            return res.status(401).json({ message: 'Invalid user type' });
+          }
+        } else {
+          // Passwords do not match, authentication failed
+          return res.status(401).json({ message: 'Authentication failed' });
+        }
+      } catch (compareError) {
+        console.error('Error comparing passwords:', compareError);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+    });
+  });*/
 
 
+
+// LOGIN
+router.post('/login', (req, res) => {
+  const { Email, Password, UserType } = req.body;
+
+  // Izabrati tabelu
+  const tableName = UserType === 'admin' ? 'admins' : 'students';
+
+  // Glavna funkcija
+  connection.query(`SELECT * FROM ${tableName} WHERE Email = ?`, [Email], async (error, results) => {
+    if (error) {
+      console.error('Error in login:', error);
+      return res.status(500).json(error);
+    }
+
+    if (results.length === 0) {
+      
+      return res.status(401).json({ message: 'Nema korisnika' });
+    }
+
+    const user = results[0];
+
+    try {
+      // Poređenje šifre
+      const passwordMatch = await bcrypt.compare(Password, user.Password);
+
+      if (passwordMatch) {
+        // JWT
+        const token = jwt.sign(
+          { userId: user.id, userType: user.UserType },
+          'your-secret-key', 
+          { expiresIn: '1h' } 
+        );
+
+        return res.status(200).json({ message: 'Uspješna prijava!', token, userType: user.UserType });
+      } else {
+        // Passwords do not match, authentication failed
+        return res.status(401).json({ message: 'Neuspješna prijava!' });
+      }
+    } catch (compareError) {
+      console.error('Error comparing passwords:', compareError);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+});
+  
 module.exports = router;
