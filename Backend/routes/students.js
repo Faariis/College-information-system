@@ -1,7 +1,11 @@
 const express = require("express");
 const connection = require("../connection");
 const router = express.Router();
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const { route } = require("..");
 
+//-------------------------------------------------------------------------------------------------------
 // GET
 
 router.get("/get", (req, res) => {
@@ -14,9 +18,9 @@ router.get("/get", (req, res) => {
     }
   });
 });
-
+//-------------------------------------------------------------------------------------------------------
 // POST
-
+/*
 router.post("/add", (req, res) => {
   let students = req.body;
 
@@ -207,8 +211,8 @@ router.post("/add", (req, res) => {
       );
     }
   );
-});
-
+});*/
+//-------------------------------------------------------------------------------------------------------
 // UPDATE
 
 router.patch("/update", (req, res) => {
@@ -253,7 +257,8 @@ router.patch("/update", (req, res) => {
       }
 
       // Provjerava da li postoji student sa istim matičnim brojem
-      const checkStudentJMBG = "SELECT * FROM students WHERE JMBG = ? AND StudentID <> ?";
+      const checkStudentJMBG =
+        "SELECT * FROM students WHERE JMBG = ? AND StudentID <> ?";
       connection.query(
         checkStudentJMBG,
         [students.JMBG, students.StudentID],
@@ -334,72 +339,149 @@ router.patch("/update", (req, res) => {
                       .json({ error: "Već postoji student sa tim mailom." });
                   }
 
+                  // Provjerava da li postoji student sa istim brojem telefona
+                  const checkStudentPhone =
+                    "SELECT * FROM students WHERE Phone = ? AND StudentID <> ?";
+                  connection.query(
+                    checkStudentPhone,
+                    [students.Phone, students.StudentID],
+                    (err, studentPhone) => {
+                      if (err) {
+                        console.error(
+                          "Error checking student phone existence:",
+                          err
+                        );
+                        return res.status(500).json({
+                          error: "Error checking student phone existence",
+                        });
+                      }
 
-               // Provjerava da li postoji student sa istim brojem telefona
-               const checkStudentPhone =
-               "SELECT * FROM students WHERE Phone = ? AND StudentID <> ?";
-             connection.query(
-               checkStudentPhone,
-               [students.Phone, students.StudentID],
-               (err, studentPhone) => {
-                 if (err) {
-                   console.error(
-                     "Error checking student phone existence:",
-                     err
-                   );
-                   return res.status(500).json({
-                     error: "Error checking student phone existence",
-                   });
-                 }
+                      if (studentPhone.length !== 0) {
+                        return res.status(400).json({
+                          error: "Već postoji student sa tim brojem telefona.",
+                        });
+                      } else if (!/^\d+$/.test(students.Phone)) {
+                        return res.status(400).json({
+                          message: "Telefon mora se sastojati od brojeva!",
+                        });
+                      }
 
-                 if (studentPhone.length !== 0) {
-                   return res.status(400).json({
-                     error: "Već postoji student sa tim brojem telefona.",
-                   });
-                 } else if (!/^\d+$/.test(students.Phone)) {
-                   return res.status(400).json({
-                     message: "Telefon mora se sastojati od brojeva!",
-                   });
-                 }
-
-// UPDATE Glavna funkcija
-  var query =
-    "update students set RegistrationYear=?, Semester=?, IndexNumber=?, JMBG=?, FirstName=?, LastName=?, Gender=? ,Email=?, Phone=?, DateOfBirth=?, PlaceOfBirth=?, Address=?, UserType=?, Password=? where StudentID=?";
-  connection.query(
-    query,
-    [
-      students.RegistrationYear,
-      students.Semester,
-      students.IndexNumber,
-      students.JMBG,
-      students.FirstName,
-      students.LastName,
-      students.Gender,
-      students.Email,
-      students.Phone,
-      students.DateOfBirth,
-      students.PlaceOfBirth,
-      students.Address,
-      students.UserType,
-      students.Password,
-      students.StudentID
-    ],
-    (err, results) => {
-      if (!err) {
-        if (results.affectedRows === 0) {
-          return res.status(404).json({ message: "Id biranog studenta ne postoji!" });
+                      // UPDATE Glavna funkcija
+                      var query =
+                        "update students set RegistrationYear=?, Semester=?, IndexNumber=?, JMBG=?, FirstName=?, LastName=?, Gender=? ,Email=?, Phone=?, DateOfBirth=?, PlaceOfBirth=?, Address=?, UserType=?, Password=? where StudentID=?";
+                      connection.query(
+                        query,
+                        [
+                          students.RegistrationYear,
+                          students.Semester,
+                          students.IndexNumber,
+                          students.JMBG,
+                          students.FirstName,
+                          students.LastName,
+                          students.Gender,
+                          students.Email,
+                          students.Phone,
+                          students.DateOfBirth,
+                          students.PlaceOfBirth,
+                          students.Address,
+                          students.UserType,
+                          students.Password,
+                          students.StudentID,
+                        ],
+                        (err, results) => {
+                          if (!err) {
+                            if (results.affectedRows === 0) {
+                              return res
+                                .status(404)
+                                .json({
+                                  message: "Id biranog studenta ne postoji!",
+                                });
+                            }
+                            return res
+                              .status(200)
+                              .json({
+                                message: "Student uspješno izmijenjen!",
+                              });
+                          } else {
+                            return res.status(500).json(err);
+                          }
+                        }
+                      );
+                    }
+                  );
+                }
+              );
+            }
+          );
         }
-        return res.status(200).json({ message: "Student uspješno izmijenjen!" });
-      } else {
-        return res.status(500).json(err);
-      }
+      );
     }
   );
 });
+//-------------------------------------------------------------------------------------------------------
+// DELETE
+
+router.delete('/delete', (req, res) =>{
+      let students = req.body;
+      var query = 'delete from students';
+      connection.query(query, (err, results) =>{
+          if (!err) {
+            if (results.affectedRows > 0) {
+                return res.status(200).json({message: "Svi studenti uspješno izbrisani!"});
+            } else {
+                return res.status(404).json({message: "Nema studenata za izbrisati!"});
+            }
+          } else {
+            return res.status(500).json({error: "Greška prilikom brisanja studenata!"});
+          }
+      });
 });
+//-------------------------------------------------------------------------------------------------------
+// LOGIN
+
+router.post('/login', async(req, res) =>{
+    try {
+       const {
+        RegistrationYear,
+        Semester,
+        IndexNumber,
+        JMBG,
+        FirstName,
+        LastName,
+        Gender,
+        Email,
+        Phone,
+        DateOfBirth,
+        PlaceOfBirth,
+        Address,
+        UserType,
+        Password } = req.body;
+       // Vrši se hashiranje šifre
+       const hashedPassword = await bcrypt.hash(Password, 10);
+
+       // Glavna funkcija 
+       const query = 'insert into Students (RegistrationYear, Semester, IndexNumber, JMBG, FirstName, LastName, Gender, Email, Phone, DateOfBirth, PlaceOfBirth, Address, UserType, Password) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+       const results = connection.query(query, [RegistrationYear,
+        Semester,
+        IndexNumber,
+        JMBG,
+        FirstName,
+        LastName,
+        Gender,
+        Email,
+        Phone,
+        DateOfBirth,
+        PlaceOfBirth,
+        Address,
+        UserType,
+        hashedPassword]);
+
+        return res.status(201).json({message: "Korisnik uspješno registrovan!"});
+    } catch (error) {
+        console.error('Greška:', error);
+        return res.status(500).json({ error: 'Greška kod!' });
+    }
 });
-});
-});
-});
+
 
 module.exports = router;
