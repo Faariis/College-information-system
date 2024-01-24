@@ -1,6 +1,6 @@
 -- Students table
 CREATE TABLE Students (
-    StudentID AUTO_INCREMENT INT PRIMARY KEY,
+    StudentID INT AUTO_INCREMENT PRIMARY KEY,
     RegistrationYear INT,
     Semester INT,
     IndexNumber VARCHAR(20) UNIQUE,
@@ -56,10 +56,10 @@ CREATE TABLE StudentsCourses (
 
 -- AdminsTeachers table
 CREATE TABLE Admins (
-    AdminID INT PRIMARY KEY,
-    FirstName VARCHAR(50),
-    LastName VARCHAR(50),
-    Email VARCHAR(100),
-    Password VARCHAR(255), 
-    UserType VARCHAR(20) DEFAULT 'admin' 
+    AdminID INT AUTO_INCREMENT PRIMARY KEY,
+    FirstName VARCHAR(50) NOT NULL,
+    LastName VARCHAR(50) NOT NULL,
+    Email VARCHAR(100) NOT NULL,
+    Password VARCHAR(255) NOT NULL,
+    UserType VARCHAR(20) DEFAULT 'admin' NOT NULL
 );
