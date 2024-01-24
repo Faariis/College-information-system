@@ -4,6 +4,7 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
+
 //-------------------------------------------------------------------------------------------
 // GET
 router.get("/get", (req, res) => {
@@ -76,8 +77,47 @@ router.post("/register", (req, res) => {
         });
   });   
   });
+//-------------------------------------------------------------------------------------------
+// LOGIN 
+router.post('/login', (req, res) =>{
+    const { Email, Password, UserType } = req.body;
+    
+    // Biranje tabele na osnovu usertype
+    const tableName = UserType === 'admin' ? 'admins' : 'students';
+    
+    const query = `SELECT * FROM ${tableName} WHERE Email = ?`
+
+    connection.query(query, [Email], async(error, results) =>{
+          if (error) {
+            console.error("Error in login:", error);
+            return res.status(500).json(error);
+          }
+          if (results.length === 0) {
+            return res.status(200).json({message: "Nema korisnika!"});
+          }
+
+          const user = results[0];
+
+          try {
+            // Poređenje šifre
+            const paswordMatch = await bcrypt.compare(Password, user.Password);
+
+            if (paswordMatch) {
+                // JWT
+                const token = jwt.sign({userId: user.userId, userType: user.userType}, "your-secret-key", {expiresIn: "1h"});
+                return res.status(200).json({message: "Uspješna prijava!", token, userType: user.userType });
+            } else {
+                return res.status(400).json({message: "Neuspješna prijava!"});
+            }
+          } catch (compareError) {
+            console.error("Error comparing passwords: ", compareError);
+            return res.status(500).json({message: "Internal server error"});
+          }
+    })
+});
 
 //-------------------------------------------------------------------------------------------
+// DELETE 
 router.delete("/delete", (req, res) => {
   var query = "delete from admins";
 

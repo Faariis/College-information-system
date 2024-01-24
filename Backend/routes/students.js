@@ -694,7 +694,7 @@ router.post("/login", (req, res) => {
   const { Email, Password, UserType } = req.body;
 
   // Izabrati tabelu
-  const tableName = UserType === "admin" ? "admins" : "students";
+  const tableName = UserType === "student" ? "students" : "admins";
 
   // Glavna funkcija
   connection.query(
@@ -707,7 +707,7 @@ router.post("/login", (req, res) => {
       }
 
       if (results.length === 0) {
-        return res.status(401).json({ message: "Nema korisnika" });
+        return res.status(401).json({ message: "Nema korisnika!" });
       }
 
       const user = results[0];
