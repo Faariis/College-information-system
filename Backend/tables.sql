@@ -55,8 +55,8 @@ CREATE TABLE StudentsCourses (
 );
 
 -- AdminsTeachers table
-CREATE TABLE AdminsTeachers (
-    AdminTeacherID INT PRIMARY KEY,
+CREATE TABLE Admins (
+    AdminID INT PRIMARY KEY,
     FirstName VARCHAR(50),
     LastName VARCHAR(50),
     Email VARCHAR(100),

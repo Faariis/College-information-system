@@ -3,7 +3,7 @@ const connection = require("../connection");
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-//const { route } = require("..");
+
 
 //-------------------------------------------------------------------------------------------------------
 // GET
@@ -688,7 +688,7 @@ router.post("/register", (req, res) => {
     }
   );
 });
-
+// -----------------------------------------------------------------------------------------------------------------------------------
 // LOGIN
 router.post("/login", (req, res) => {
   const { Email, Password, UserType } = req.body;
