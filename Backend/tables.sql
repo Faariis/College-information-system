@@ -54,7 +54,7 @@ CREATE TABLE StudentsCourses (
     FOREIGN KEY (CourseID) REFERENCES Courses(CourseID)
 );
 
--- AdminsTeachers table
+-- Admins table
 CREATE TABLE Admins (
     AdminID INT AUTO_INCREMENT PRIMARY KEY,
     FirstName VARCHAR(50) NOT NULL,

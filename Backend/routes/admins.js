@@ -39,6 +39,36 @@ router.register("/register", (req, res) => {
           return res.status(400).json({error: 'Ime ne smije sadržavati brojeve!'});
      }
 
+     // Provjera da više admina nema isti mail
+     const checkAdminsEmail = 'SELECT * FROM admins WHERE Email = ?';
+     
+     connection.query(checkAdminsEmail, [admins.Email], (err, adminEmail) => {
+          if (err) {
+            console.error('Error checking student first and last name existence:', err);
+            return res.status(500).json({message: 'Error checking student first and last name existence:'});
+          }
+          if (adminEmail.length !== 0) {
+            return res.status(400).json({error: 'Već ima admin sa istim mailom!'});
+          } 
+        
+        // Haširanje šifre
+        bcrypt.hash(Password, 10).then((hashedPassword) =>{
+        
+        const query = 'INSERT INTO admins (FirstName, LastName, Password, UserType) VALUES (?,?,?,?)';
+        
+        connection.query(query, [admins.FirstName, admins.LastName, hashedPassword, admins.UserType], (err, results) =>{
+             if(!err) {
+                return res.status(200).json({message: "Admin uspješno registrovan!"});
+             } else {
+                console.error("Error inserting into the database", err);
+                return res.status(500).json({error: "Error inserting into the database"});
+             }
+        });
+        }).catch((error) => {
+                console.error("Error hashing password:", err);
+                return res.status(500).json({message: "Greška kod haširanja šifre!"});
+        });
+        });
   });   
   });
 
