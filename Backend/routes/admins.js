@@ -19,9 +19,14 @@ router.get("/get", (req, res) => {
 });
 //-------------------------------------------------------------------------------------------
 // REGISTRATION
-router.register("/register", (req, res) => {
+router.post("/register", (req, res) => {
   const { FirstName, LastName, Email, Password, UserType } = req.body;
   let admins = req.body;
+  
+  // Provjera enumeracije da je "admin"
+  if (admins.UserType !== "admin"){
+    return res.status(400).json({error: 'UserType mora biti admin!'});
+  }
 
   // Provjera da više admina nema isto ime i prezime
   const checkAdminsFirstNameLastName = 'SELECT * FROM admins WHERE FirstName = ? AND LastName = ?';
@@ -54,9 +59,9 @@ router.register("/register", (req, res) => {
         // Haširanje šifre
         bcrypt.hash(Password, 10).then((hashedPassword) =>{
         
-        const query = 'INSERT INTO admins (FirstName, LastName, Password, UserType) VALUES (?,?,?,?)';
+        const query = 'INSERT INTO admins (FirstName, LastName, Email, UserType, Password) VALUES (?,?,?,?,?)';
         
-        connection.query(query, [admins.FirstName, admins.LastName, hashedPassword, admins.UserType], (err, results) =>{
+        connection.query(query, [admins.FirstName, admins.LastName, admins.Email, admins.UserType, hashedPassword], (err, results) =>{
              if(!err) {
                 return res.status(200).json({message: "Admin uspješno registrovan!"});
              } else {
