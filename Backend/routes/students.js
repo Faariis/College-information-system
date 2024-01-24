@@ -365,13 +365,29 @@ router.patch("/update", (req, res) => {
                           message: "Telefon mora se sastojati od brojeva!",
                         });
                       }
-
-                      // UPDATE Glavna funkcija
-                      var query =
-                        "update students set RegistrationYear=?, Semester=?, IndexNumber=?, JMBG=?, FirstName=?, LastName=?, Gender=? ,Email=?, Phone=?, DateOfBirth=?, PlaceOfBirth=?, Address=?, UserType=?, Password=? where StudentID=?";
-                      connection.query(
-                        query,
-                        [
+                      
+                      if (students.Password) {
+                        // Haširanje šifre
+                        bcrypt.hash(students.Password, 10, (hashErr, hashedPassword) => {
+                          if (hashErr) {
+                            console.error("Error hashing password:", hashErr);
+                            return res.status(500).json({ error: "Error hashing password" });
+                          }
+                    
+                          // Ako se šifra promijeni updejtuje bazu sa novom šifrom
+                          updateStudent(students, hashedPassword);
+                        });
+                      } else {
+                        // Ako šifra ostane ista nema ona updejta
+                        updateStudent(students);
+                      }
+                    
+                      // Funkcija za updejtovanje
+                      const updateStudent = (students, hashedPassword = null) => {
+                        // UPDATE Glavna funkcija
+                        var query =
+                          "update students set RegistrationYear=?, Semester=?, IndexNumber=?, JMBG=?, FirstName=?, LastName=?, Gender=? ,Email=?, Phone=?, DateOfBirth=?, PlaceOfBirth=?, Address=?, UserType=?, Password=? where StudentID=?";
+                        const queryParams = [
                           students.RegistrationYear,
                           students.Semester,
                           students.IndexNumber,
@@ -385,10 +401,11 @@ router.patch("/update", (req, res) => {
                           students.PlaceOfBirth,
                           students.Address,
                           students.UserType,
-                          students.Password,
+                          hashedPassword, 
                           students.StudentID,
-                        ],
-                        (err, results) => {
+                        ];
+                    
+                        connection.query(query, queryParams, (err, results) => {
                           if (!err) {
                             if (results.affectedRows === 0) {
                               return res.status(404).json({
@@ -401,8 +418,10 @@ router.patch("/update", (req, res) => {
                           } else {
                             return res.status(500).json(err);
                           }
-                        }
-                      );
+                        });
+                      };
+                    });
+                      
                     }
                   );
                 }
@@ -413,7 +432,7 @@ router.patch("/update", (req, res) => {
       );
     }
   );
-});
+
 //-------------------------------------------------------------------------------------------------------
 // DELETE
 
