@@ -10,8 +10,12 @@ router.post('/login', (req, res) =>{
     const { Email, Password, UserType } = req.body;
 
     // Biranje tabele na osnovu korisnika
+    if (UserType !== 'admin' && UserType !== 'student') {
+        return res.status(401).json({message: "UserType mora biti admin ili student!"});
+    }
     const tableName = UserType === 'admin' ? 'admins' : 'students';
-
+  
+   
     const query = `SELECT * FROM ${tableName} WHERE Email = ?`;
 
     connection.query(query, [Email], async(error, results) =>{

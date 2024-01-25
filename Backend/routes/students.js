@@ -694,6 +694,9 @@ router.post("/login", (req, res) => {
   const { Email, Password, UserType } = req.body;
 
   // Izabrati tabelu
+  if (UserType !== 'admin' && UserType !== 'student') {
+    return res.status(401).json({message: "UserType mora biti admin ili student!"});
+}
   const tableName = UserType === "student" ? "students" : "admins";
 
   // Glavna funkcija
