@@ -6,6 +6,7 @@ const studentsRoute = require('./routes/students');
 const adminsRoute = require('./routes/admins');
 const loginRoute = require('./routes/login');
 const coursesRoute = require('./routes/courses');
+const enrollmentsRoute = require('./routes/enrollments');
 
 app.use(cors());
 app.use(express.urlencoded({extended: true}));
@@ -14,6 +15,7 @@ app.use('/students', studentsRoute);
 app.use('/admins', adminsRoute);
 app.use('/login', loginRoute);
 app.use('/courses', coursesRoute);
+app.use('/enrollments', enrollmentsRoute);
 
 module.exports = app;
 
