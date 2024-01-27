@@ -16,7 +16,7 @@ CREATE TABLE Students (
     UserType VARCHAR(20) DEFAULT 'student', 
     Password VARCHAR(255) 
 );
--- ff
+
 -- Courses table
 CREATE TABLE Courses (
     CourseID INT PRIMARY KEY,
