@@ -33,7 +33,18 @@ router.post('/post', (req, res) => {
             return res.status(400).json({message: "Već ima predmet sa istim kodom!"});
         }
     
+    // Provjera ima li više kurseva sa istim nazivom
+    const courseNamequery = 'SELECT * FROM courses WHERE CourseName = ?';
 
+    connection.query(courseNamequery, [courses.CourseName], (err, courseName) =>{
+         if (err) {
+            console.error("Error checking course name", err);
+            return res.status(500).json({message: "Error checking course name"});
+         }
+         if (courseName.length !== 0) {
+            return res.status(400).json({message: "Već ima predmet sa istim nazivom!"});
+         }
+   
 
 
     const query = 'INSERT INTO courses (CourseCode, CourseName, ECTSCredits) VALUES (?,?,?)';
@@ -47,6 +58,6 @@ router.post('/post', (req, res) => {
     });
 });
 });
-
+});
 
 module.exports = router;
