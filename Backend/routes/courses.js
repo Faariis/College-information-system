@@ -60,6 +60,8 @@ router.post('/post', (req, res) => {
 });
 });
 
+// UPDATE
+
 // DELETE
 router.delete('/delete', (req, res) => {
     let courese = req.body;
