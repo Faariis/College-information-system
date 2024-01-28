@@ -19,7 +19,7 @@ CREATE TABLE Students (
 
 -- Courses table
 CREATE TABLE Courses (
-    CourseID INT PRIMARY KEY,
+    CourseID INT AUTO_INCREMENT PRIMARY KEY,
     CourseCode VARCHAR(20) UNIQUE,
     CourseName VARCHAR(100),
     ECTSCredits INT
