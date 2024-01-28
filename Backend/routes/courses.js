@@ -60,4 +60,24 @@ router.post('/post', (req, res) => {
 });
 });
 
+// DELETE
+router.delete('/delete', (req, res) => {
+    let courese = req.body;
+
+    const query = 'DELETE FROM courses';
+
+    connection.query(query, (err, results) =>{
+          if (results.affectedRows === 0) {
+            return res.status(400).json({message: "Nema predmeta za izbrisati!"});
+          }
+          if (!err) {
+            return res.status(200).json({message: "Predmeti uspješni izbrisani!"});
+          } else {
+            return res.status(500).json(err);
+          }
+    });
+
+});
+
+
 module.exports = router;
