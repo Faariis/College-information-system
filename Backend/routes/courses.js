@@ -20,6 +20,21 @@ router.get('/get', (req, res) =>{
 // POST
 router.post('/post', (req, res) => {
     let courses = req.body;
+    
+    // Provjerava ima li više kurseva sa istim kodom
+    const courseCodequery = 'SELECT * FROM courses WHERE CourseCode = ?';
+
+    connection.query(courseCodequery, [courses.CourseCode], (err, courseCode) =>{
+        if (err) {
+            console.error("Error checking course code: ", err);
+            return res.status(500).json({message: "Error checking course code: "});
+        } 
+        if (courseCode.length !== 0) {
+            return res.status(400).json({message: "Već ima predmet sa istim kodom!"});
+        }
+    
+
+
 
     const query = 'INSERT INTO courses (CourseCode, CourseName, ECTSCredits) VALUES (?,?,?)';
 
@@ -30,6 +45,7 @@ router.post('/post', (req, res) => {
             return res.status(400).json(err);
         }
     });
+});
 });
 
 
